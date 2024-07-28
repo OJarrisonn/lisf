@@ -10,6 +10,7 @@
   ["-d" "--only-dirs" "Shows only directories"]
   ["-f" "--only-files" "Shows only files"]
   ["-i" "--icons" "Shows icons (require nerd fonts)"]
+  [nil "--no-quote" "Does not quote file names with spaces"]
   ["-l" "--long" "Shows long listing"]
   ["-h" "--header" "Shows a header at the top of the list"]
   [nil, "--group-directories-first" "Shows directories first"]
@@ -49,6 +50,13 @@
     ;; Reverse 
     (if (:reverse opts)
       (reverse entries)
+      entries)
+    ;; Quote the file names
+    (if (not (:no-quote opts))
+      (map #(if (string/includes? (:name %) " ")
+              (assoc % :name (str "\"" (:name %) "\"")) 
+              %) 
+           entries)
       entries)
     ;; Use icons
     (if (:icons opts)
