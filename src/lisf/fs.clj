@@ -24,3 +24,7 @@
    (if (.isDirectory file)
      "/"
      "")))
+
+(def not-hidden #(not (.isHidden %)))
+
+(def is-dir #(.isDirectory %))

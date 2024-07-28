@@ -1,7 +1,8 @@
 (ns lisf.core
   (:gen-class)
   (:require [lisf.filetype :as file])
-  (:require [lisf.fs :as fs]))
+  (:require [lisf.fs :as fs])
+  (:require [lisf.cli :as cli]))
 
 (defn fmt-entry 
   "Format the file entry"
@@ -15,7 +16,7 @@
 (defn -main
   "lisf is ls implementation in clojure"
   [& args]
-  (let [dir (if (empty? args) "." (first args))
-        files (fs/lisf dir)]
-    (doseq [file files]
-      (println (fmt-entry file)))))
+  
+  (let [{:keys [output status]} (cli/eval-args args)]
+    (println output)
+    (System/exit (if (= status :ok) 0 1))))
