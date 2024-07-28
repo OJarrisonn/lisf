@@ -1,7 +1,8 @@
 (ns lisf.cli
   (:require [clojure.tools.cli :refer [parse-opts]]
             [lisf.fs :as fs]
-            [lisf.filetype :as file])
+            [lisf.filetype :as file]
+            [lisf.config :refer [config-load]])
   (:require [clojure.string :as string]))
 
 (def options 
@@ -23,6 +24,14 @@
   (->> ["lisf"
        "Simple ls implementation in clojure"] 
       (string/join \newline)))
+
+(defn fmt-entry
+  "Format a given entry for printing"
+  [entry]
+  (str (:dir-flag entry) 
+       (:permissions entry) "  " 
+       (:owner entry) "  " 
+       (:name entry)))
 
 (defn build-list
   "Builds the list of entries of a path based on the options"
@@ -62,15 +71,24 @@
     (if (:icons opts)
       (map #(assoc % :name (str (file/icon (:type %)) "  " (:name %))) entries)
       entries)
+    ;; If --long is used
+    (if (:long opts)
+      (map #(assoc % 
+                   :owner (fs/get-owner (:file %)) 
+                   :permissions (fs/get-file-permissions (:file %))
+                   :dir-flag (fs/get-dir-flag (:file %))) 
+           entries)
+      entries)
     ;;Build the output
-    (map #(:name %) entries)
+    (map fmt-entry entries)
     (string/join \newline entries)))
 
 (defn eval-args
  "Validates the cli args
    Returns {:output :status}"
  [args]
- (let [{:keys [options arguments errors summary]} (parse-opts args options)]
+ (let [configs (config-load)
+       {:keys [options arguments errors summary]} (parse-opts args options)]
    (cond
      ;; Shows the help page no matter what
      (:help options) {:output (str usage "\n" summary)
@@ -88,5 +106,5 @@
      (not (fs/exists? (or (first arguments) "."))) {:output (str "Directory " (first arguments) " does not exist")
                                                     :status :err}
      ;; Everything is fine
-     :else {:output (build-list options (or (first arguments) "."))
+     :else {:output (build-list (merge configs options) (or (first arguments) "."))
             :status :ok})))
