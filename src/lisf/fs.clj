@@ -28,3 +28,8 @@
 (def not-hidden #(not (.isHidden %)))
 
 (def is-dir #(.isDirectory %))
+
+(defn get-permissions
+  "Gets the permissions of a given file"
+  [file]
+  (.getPermissions (io/file file)))

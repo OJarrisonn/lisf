@@ -9,9 +9,10 @@
   ["-a" "--all" "Shows hidden files"]
   ["-d" "--only-dirs" "Shows only directories"]
   ["-f" "--only-files" "Shows only files"]
-  ["-i" "--icon" "Shows icons"]
+  ["-i" "--icons" "Shows icons (require nerd fonts)"]
   ["-l" "--long" "Shows long listing"]
-  ["-h" "--human" "Shows human readable sizes"]
+  ["-h" "--header" "Shows a header at the top of the list"]
+  [nil, "--group-directories-first" "Shows directories first"]
   ["-s" "--sort" "Sorts the output"
    :default "name"
    :parse-fn keyword]
@@ -25,28 +26,37 @@
 (defn build-list
   "Builds the list of entries of a path based on the options"
   [opts path]
-  (->> (fs/lisf path) 
-       ;; Build the entry list
-       (map (fn [file] (let [name (fs/get-name file)] 
-                         {:file file 
-                          :name name 
-                          :type (file/type-of name)}))) 
-       ;; If not all filter hidden files
-       (filter #(or (:all opts) 
-                    (fs/not-hidden (:file %))))
-       ;; If only-dirs filter only directories 
-       (filter #(or (not (:only-dirs opts)) 
-                    (fs/is-dir (:file %))))
-       ;; If only-files filter only files  
-       (filter #(or (not (:only-files opts)) 
-                    (not (fs/is-dir (:file %)))))
-       ;; Sort the output
-       (sort-by (fn [entry] (.toLowerCase (:name entry))))
-       ;; Reverse 
-       ((if (:reverse opts) reverse identity))
-       ;;Build the output
-       (map #(:name %))
-       (string/join \newline)))
+  (as-> (fs/lisf path) entries
+    ;; Build the entry list 
+    (map (fn [file]
+           (let [name (fs/get-name file)]
+             {:file file
+              :name name
+              :type (file/type-of name)}))
+         entries)
+    ;; If not all filter hidden files
+    (if (not (:all opts))
+      (filter #(fs/not-hidden (:file %)) entries)
+      entries)
+    ;; Sort the output
+    (sort-by (fn [entry] (.toLowerCase (:name entry)))
+             entries)
+    ;; Group directories first
+    (if (:group-directories-first opts)
+      (sort-by (fn [entry] (if (fs/is-dir (:file entry)) 0 1))
+               entries)
+      entries)
+    ;; Reverse 
+    (if (:reverse opts)
+      (reverse entries)
+      entries)
+    ;; Use icons
+    (if (:icons opts)
+      (map #(assoc % :name (str (file/icon (:type %)) "  " (:name %))) entries)
+      entries)
+    ;;Build the output
+    (map #(:name %) entries)
+    (string/join \newline entries)))
 
 (defn eval-args
  "Validates the cli args
