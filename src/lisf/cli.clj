@@ -13,6 +13,7 @@
   ["-i" "--icons" "Shows icons (require nerd fonts)"]
   [nil "--no-quote" "Does not quote file names with spaces"]
   ["-l" "--long" "Shows long listing"]
+  ["-1" "--oneline" "Shows one entry per line"]
   ["-h" "--header" "Shows a header at the top of the list"]
   [nil, "--group-directories-first" "Shows directories first"]
   ["-s" "--sort" "Sorts the output"
@@ -63,5 +64,5 @@
      {:output 
       (->> (or (first arguments) ".") 
            (listing/build-entry-list options)
-           (listing/fmt-entry-list))
+           (listing/fmt-entry-list options))
       :status :ok})))

@@ -5,6 +5,12 @@
             [clojure.string :as string]))
 
 (def fields [:icon :name :size :date :owner :permissions :dir-flag])
+(def header-fields {:name "Name" 
+                    :date "Date Modified" 
+                    :owner "User"
+                    :group "Group"
+                    :size "Size"
+                    :permissions "Permissions"})
 
 (defn fmt-entry
   "Format a given entry for printing aligned"
@@ -37,6 +43,12 @@
     ;; Include the directory/link flag
     (:dir-flag entry)
     (str (:dir-flag entry))))
+
+(defn fmt-short-entry
+  [entry]
+  (cond->> (:name entry)
+    (:icon entry)
+    (str (:icon entry) " ")))
 
 (defn into-entry
   "Converts a file into an entry"
@@ -105,10 +117,25 @@
   [entries field]
   (util/max-length (map #(get % field) entries)))
 
+(defn fmt-header
+  "Formats the header of the list"
+  [lengths]
+  (->> header-fields
+       (map (fn [[k v]] (util/align-left v (get lengths k))))
+       (string/join "  ")))
+
+(defn display-list
+  "Displays the entries in a list"
+  [opts entries]
+  (let [lengths (zipmap fields (map #(field-max-length entries %) fields))
+        fmt (->> entries
+                 (map #(fmt-entry % lengths))
+                 (string/join \newline))]
+    (if (:header opts) 
+      (str (fmt-header lengths) \newline fmt)
+      fmt)))
+
 (defn fmt-entry-list
   "Format the entry list"
-  [entries]
-  (let [lengths (zipmap fields (map #(field-max-length entries %) fields))]
-    (->> entries
-         (map #(fmt-entry % lengths))
-         (string/join \newline))))
+  [opts entries]
+  (display-list opts entries))
