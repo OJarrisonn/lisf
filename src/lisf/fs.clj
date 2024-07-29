@@ -8,7 +8,7 @@
   [path]
   (.exists (io/file path)))
 
-(defn lisf
+(defn list-files
   "List all files in a given directory
    dir - directory to list files
    If the directory is a file, it will return the file itself"
@@ -48,6 +48,19 @@
   [file]
   (if (.isDirectory file) "d" "."))
 
-(def not-hidden #(not (.isHidden %)))
+(defn get-size
+  "Obtains the size of a file"
+  [file]
+  (if (.isDirectory file)
+    0
+    (.length file)))
+
+(defn get-date
+  "Obtains the last modified date of a file"
+  [file]
+  (let [date (.lastModified file)]
+    (java.util.Date. date)))
+
+(def hidden? #(.isHidden %))
 
 (def is-dir #(.isDirectory %))

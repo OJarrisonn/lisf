@@ -1,0 +1,3 @@
+[tools]
+java = "corretto-21"
+leiningen = "2.11.2"

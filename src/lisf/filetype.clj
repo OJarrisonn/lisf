@@ -39,7 +39,7 @@
   [type] 
   (get types type (get types :other)))
 
-(defn icon 
+(defn icon-of 
   "Gets the icon for a given filetype"
   [type]
   (get (data-of type) :icon))

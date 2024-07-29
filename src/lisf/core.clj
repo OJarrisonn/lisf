@@ -9,7 +9,7 @@
   [file]
   (let [name (fs/get-name file)
         ftype (file/type-of name)
-        ficon (file/icon ftype)] 
+        ficon (file/icon-of ftype)] 
     (str ficon "  " name)))
 
 ; Entry point for lisf
