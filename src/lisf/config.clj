@@ -11,5 +11,5 @@
   "Loads the configuration file"
   []
   (if (fs/exists? config-path)
-    (load-string (slurp config-path))
+    (load-file config-path)
     {}))

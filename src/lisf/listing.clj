@@ -6,11 +6,6 @@
 
 (def fields [:icon :name :size :date :owner :permissions :dir-flag])
 
-(defn name-with-target
-  "Associates the target of a symbolic link to the entry"
-  [target name]
-  (str name " -> " target))
-
 (defn fmt-entry
   "Format a given entry for printing aligned"
   [entry lengths]
