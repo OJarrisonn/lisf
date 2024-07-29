@@ -3,6 +3,14 @@
            [java.time.temporal ChronoUnit]
            [java.util Date]))
 
+(defmacro swap->> [& forms]
+  "Takes the last form and places it as the second form"
+  (let [last (last forms)
+        forms (butlast forms)
+        first (first forms)
+        rest (next forms)]
+    `(~first ~last ~@rest)))
+
 (defn fmt-recent-date [date] 
   (let [formatter (java.text.SimpleDateFormat. "dd MMM HH:mm")] 
     (.format formatter date)))

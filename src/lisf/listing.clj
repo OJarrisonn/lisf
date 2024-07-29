@@ -6,25 +6,40 @@
 
 (def fields [:icon :name :size :date :owner :permissions :dir-flag])
 
+(defn name-with-target
+  "Associates the target of a symbolic link to the entry"
+  [target name]
+  (str name " -> " target))
+
 (defn fmt-entry
   "Format a given entry for printing aligned"
   [entry lengths]
   (cond->> (:name entry)
-    (:icon entry) 
+    ;; Include the link target
+    (:link-target entry)
+    (util/swap->> str " -> " (:link-target entry))
+
+    ;; Include the icon
+    (:icon entry)
     (str (:icon entry) " ")
 
+    ;; Include the date
     (:date entry)
     (str (util/align-left (:date entry) (:date lengths)) "  ")
-    
+
+    ;; Include the owner
     (:owner entry)
     (str (util/align-left (:owner entry) (:owner lengths)) "  ")
-    
+
+    ;; Include the file size
     (:size entry)
     (str (util/align-right (:size entry) (:size lengths)) "  ")
-    
+
+    ;; Include the permissions
     (:permissions entry)
     (str (:permissions entry) "  ")
-    
+
+    ;; Include the directory/link flag
     (:dir-flag entry)
     (str (:dir-flag entry))))
 
@@ -46,6 +61,9 @@
   "Associates the long fields to the entry"
   [entry]
   (assoc entry
+         :link-target (if (fs/link? (:file entry)) 
+                        (fs/get-link-target (:file entry)) 
+                        nil)
          :size (util/fmt-size (fs/get-size (:file entry)) true)
          :date (util/fmt-date (fs/get-date (:file entry)))
          :owner (fs/get-owner (:file entry))
@@ -70,7 +88,7 @@
 
     ;; Group directories first
     (:group-directories-first opts)
-    (sort-by #(if (fs/is-dir (:file %)) 0 1))
+    (sort-by #(if (fs/dir? (:file %)) 0 1))
 
     ;; Reverse 
     (:reverse opts) 

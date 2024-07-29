@@ -8,6 +8,24 @@
   [path]
   (.exists (io/file path)))
 
+(def hidden?
+  "Check if the file is hidden"
+  #(.isHidden %))
+
+(def dir?
+  "Check if the file is a directory"
+  #(.isDirectory %))
+
+(defn link?
+  "Check if the file is a symbolic link"
+  [file]
+  (-> file .toPath Files/isSymbolicLink))
+
+(defn get-link-target
+  "Obtains the target of a symbolic link"
+  [file]
+  (-> file .toPath Files/readSymbolicLink))
+
 (defn list-files
   "List all files in a given directory
    dir - directory to list files
@@ -43,15 +61,10 @@
         owner (Files/getOwner path (into-array LinkOption [LinkOption/NOFOLLOW_LINKS]))]
     (.getName owner)))
 
-(defn get-dir-flag
-  "Obtains the directory flag"
-  [file]
-  (if (.isDirectory file) "d" "."))
-
 (defn get-size
   "Obtains the size of a file"
   [file]
-  (if (.isDirectory file)
+  (if (or (dir? file) (link? file))
     0
     (.length file)))
 
@@ -61,6 +74,10 @@
   (let [date (.lastModified file)]
     (java.util.Date. date)))
 
-(def hidden? #(.isHidden %))
-
-(def is-dir #(.isDirectory %))
+(defn get-dir-flag
+  "Obtains the directory flag"
+  [file]
+  (cond 
+    (link? file) "l"
+    (dir? file) "d"
+    :else "."))
