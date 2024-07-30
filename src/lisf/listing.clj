@@ -117,12 +117,13 @@
   [entries field]
   (util/max-length (map #(get % field) entries)))
 
-(defn fmt-header
-  "Formats the header of the list"
-  [lengths]
-  (->> header-fields
-       (map (fn [[k v]] (util/align-left v (get lengths k))))
-       (string/join "  ")))
+;; (defn fmt-header
+;;   "Formats the header of the list"
+;;   [lengths] 
+;;   (->> header-fields
+;;        (filter (fn [[k v]] (contains? lengths k)))
+;;        (map (fn [[k v]] (util/align-left v (get lengths k))))
+;;        (string/join "  ")))
 
 (defn display-list
   "Displays the entries in a list"
@@ -130,10 +131,8 @@
   (let [lengths (zipmap fields (map #(field-max-length entries %) fields))
         fmt (->> entries
                  (map #(fmt-entry % lengths))
-                 (string/join \newline))]
-    (if (:header opts) 
-      (str (fmt-header lengths) \newline fmt)
-      fmt)))
+                 (string/join \newline))] 
+    fmt))
 
 (defn fmt-entry-list
   "Format the entry list"
