@@ -1,7 +1,8 @@
 (ns lisf.util
   (:import [java.time Instant]
            [java.time.temporal ChronoUnit]
-           [java.util Date]))
+           [java.util Date]) 
+  (:require [clojure.string :as string]))
 
 (defmacro swap->> [& forms]
   "Takes the last form and places it as the second form"
@@ -41,6 +42,38 @@
     (if (zero? idx)
       "-"
       (str (format "%.1f" (/ size (Math/pow unit idx))) (nth units idx)))))
+
+(defn size-unit-to-int
+  "Converts a size unit to an integer"
+  [unit]
+  (case unit
+    nil 1
+    :byte 1
+    :Ki 1024
+    :K 1000
+    :Mi 1048576
+    :M 1000000
+    :Gi 1073741824
+    :G 1000000000
+    :Ti 1099511627776
+    :T 1000000000000))
+
+(defn parse-size
+  "Gets a string representing a fmt-size and returns the size in bytes"
+  [size]
+  (let [[-all number unit] (re-find #"(\d+\.?\d*)(\w*)" size)]
+    (if (nil? -all) 
+      0
+      (* (Float/parseFloat number) 
+         (size-unit-to-int (keyword unit))))))
+
+(defn parse-date
+  "Parses a date dd MMM HH:mm or dd MMM yyyy to a Date object"
+  [date]
+  (let [formatter (if (string/includes? date ":") 
+                    (java.text.SimpleDateFormat. "dd MMM HH:mm")
+                    (java.text.SimpleDateFormat. "dd MMM yyyy"))]
+    (.parse formatter date)))
 
 (defn max-length 
   "Obtains the maximum length of a list of strings"

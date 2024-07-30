@@ -13,12 +13,12 @@
   ["-i" "--icons" "Shows icons (require nerd fonts)"]
   [nil "--no-quote" "Does not quote file names with spaces"]
   ["-l" "--long" "Shows long listing"]
-  ["-1" "--oneline" "Shows one entry per line"]
-  ["-h" "--header" "Shows a header at the top of the list"]
+  ["-g" "--group" "Shows the group of each file"]
   [nil, "--group-directories-first" "Shows directories first"]
-  ["-s" "--sort" "Sorts the output"
-   :default "name"
-   :parse-fn keyword]
+  ["-s" "--sort FIELD" "Sorts the output"
+   :default :name
+   :parse-fn keyword
+   :validate [#(contains? listing/sort-fields %) "Invalid sort field"]]
   ["-r" "--reverse" "Reverses the output"]])
 
 (def usage 

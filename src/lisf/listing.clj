@@ -4,10 +4,11 @@
             [lisf.util :as util]
             [clojure.string :as string]))
 
-(def fields [:icon :name :size :date :owner :permissions :dir-flag])
+(def fields [:icon :name :size :date :user :group :permissions :dir-flag])
+(def sort-fields #{:name :size :date :user :group})
 (def header-fields {:name "Name" 
                     :date "Date Modified" 
-                    :owner "User"
+                    :user "User"
                     :group "Group"
                     :size "Size"
                     :permissions "Permissions"})
@@ -27,10 +28,14 @@
     ;; Include the date
     (:date entry)
     (str (util/align-left (:date entry) (:date lengths)) "  ")
+    
+    ;; Include the group
+    (:group entry)
+    (str (util/align-left (:group entry) (:group lengths)) "  ")
 
     ;; Include the owner
-    (:owner entry)
-    (str (util/align-left (:owner entry) (:owner lengths)) "  ")
+    (:user entry)
+    (str (util/align-left (:user entry) (:user lengths)) "  ")
 
     ;; Include the file size
     (:size entry)
@@ -73,9 +78,19 @@
                         nil)
          :size (util/fmt-size (fs/get-size (:file entry)) true)
          :date (util/fmt-date (fs/get-date (:file entry)))
-         :owner (fs/get-owner (:file entry))
+         :user (fs/get-owner (:file entry))
          :permissions (fs/get-file-permissions (:file entry))
          :dir-flag (fs/get-dir-flag (:file entry))))
+
+(defn sort-entries
+  [criteria entries]
+  (let [sortfn (case criteria 
+                 :name #(compare (.toLowerCase (:name %1)) (.toLowerCase (:name %2))) 
+                 :size #(compare (util/parse-size (:size %1)) (util/parse-size (:size %2)))  
+                 :date #(compare (util/parse-date (:date %2)) (util/parse-date (:date %1)))  
+                 :user #(compare (.toLowerCase (:user %1)) (.toLowerCase (:user %2)))
+                 :group #(compare (.toLowerCase (:group %1)) (.toLowerCase (:group %2))))]
+    (sort sortfn entries)))
 
 (defn build-entry-list
   "Builds the list of entries of a path based on the options"
@@ -89,9 +104,17 @@
     (not (:all opts)) 
     (filter #(not (fs/hidden? (:file %))))
 
+    ;; If --long is used
+    (:long opts)
+    (map long-fields)
+
+    ;; Show the group
+    (:group opts)
+    (map #(assoc % :group (fs/get-owning-group (:file %))))
+
     ;; Sort the output
     true 
-    (sort-by #(.toLowerCase (:name %)))
+    (sort-entries (:sort opts))
 
     ;; Group directories first
     (:group-directories-first opts)
@@ -107,10 +130,7 @@
 
     ;; Use icons
     (:icons opts)
-    (map #(assoc % :icon (ft/icon-of (:type %))))
-    ;; If --long is used
-    (:long opts)
-    (map long-fields)))
+    (map #(assoc % :icon (ft/icon-of (:type %))))))
 
 (defn field-max-length
   "Obtains the maximum length of a field in the entry list"

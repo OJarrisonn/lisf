@@ -1,7 +1,8 @@
 (ns lisf.fs 
   (:require [clojure.java.io :as io])
-  (:import [java.nio.file Files LinkOption]
-           [java.nio.file.attribute PosixFilePermissions]))
+  (:import [java.io File]
+           [java.nio.file Files LinkOption]
+           [java.nio.file.attribute PosixFilePermissions PosixFileAttributes]))
 
 (defn exists?
   "Check if the given path exists"
@@ -44,6 +45,13 @@
    (if (.isDirectory file)
      "/"
      "")))
+
+(defn get-owning-group
+  "Obtains the owning group of a file"
+  [^File file]
+  (let [path (.toPath file)
+        attrs (Files/readAttributes path PosixFileAttributes (into-array LinkOption [LinkOption/NOFOLLOW_LINKS]))]
+    (.getName (.group attrs))))
 
 (defn get-file-permissions 
   "Obtains the permissions of a file as a string"
